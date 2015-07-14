@@ -72,7 +72,7 @@ public class Cookies {
 			try {
 				File fCookies = new File("cookies");
 				if (!fCookies.exists()) {
-					cookies = getCookieFromWeb();
+					cookies = getCookieFromWeb();				
 					saveToFile(cookies, fCookies);
 				} else {
 					cookies = loadFromFile(fCookies);

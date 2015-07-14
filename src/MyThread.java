@@ -19,23 +19,19 @@ public class MyThread extends Thread {
 	static String urlHome = "http://www.zhihu.com";
 	static String urlLogin = "/login";
 	static String urlPeople = "/people/";
+	static String urlTopics = "/topics";
 	static String urlTopic = "/topic/";
+	static String urlAbout = "/about";
 	static String urlFollowees = "/followees";
 	static String urlFollowers = "/followers";
 	static String urlFolloweesNext = "/ProfileFolloweesListV2";
 	static String urlFollowersNext = "/ProfileFollowersListV2";
 	static String urlNode = "/node";
 	static String peoplePatter = urlHome + urlPeople;
+	static String topicPatter = urlHome + urlTopic;
 
 	static ArrayBlockingQueue<String> queue = null;
-	static Set<String> peopleSet = Collections
-			.synchronizedSet(new HashSet<String>());
-
-	/*
-	 * static double falsePositiveProbability = 0.0002; static int expectedSize
-	 * = 3000000; static BloomFilter<String> bloomFilter = new
-	 * BloomFilter<String>( falsePositiveProbability, expectedSize);
-	 */
+	static Set<String> peopleSet = null;
 
 	MyThread(Map<String, String> cookies) {
 		this.cookies = cookies;
@@ -49,54 +45,34 @@ public class MyThread extends Thread {
 
 	int getPeopleNamesFromDoc(Document doc, String type, String userName) {
 		int ret = 0;
+		
 		Elements links = doc.getElementsByTag("a");
+	
+		
 		for (Element link : links) {
 			String url = link.attr("abs:href");
+
+			
 			if (url.matches("^" + peoplePatter + ".*")) {
 				String peopleName = url.substring(peoplePatter.length(),
 						url.length());
 				if (!peopleName.matches(".*/.*")) {
-					if (peopleName.compareTo("edit") == 0)
-						continue;
 					++ret;
-
-					if (peopleSet.contains(peopleName)) continue;
-					peopleSet.add(peopleName);
 					
-					BasicDBObject bean = new BasicDBObject();
-					bean.put("peopleId", peopleName);
-					
-					/*
-					 * if (bloomFilter.contains(peopleName)) { boolean flag =
-					 * false; while (true) { try { flag = (!new
-					 * DAO().find("people", bean) .isEmpty()); break; } catch
-					 * (Exception e) { } } if (flag) continue; } else
-					 * bloomFilter.add(peopleName);
-					 */
-
-					while (true) {
-						try {
-							DAO dao = new DAO();
-							dao.insert("people", bean);
-							break;
-						} catch (Exception e) {
-
+					if (peopleSet.contains(peopleName)){
+						if (type.compareTo("ee")==0){
+							System.out.println(userName+" "+peopleName);
+						}
+						else{
+							System.out.println(peopleName+" "+userName);
 						}
 					}
-
-					while (true) {
-						try {
-							queue.add(peopleName);
-							break;
-						} catch (Exception e) {
-							// e.printStackTrace();
-						}
-					}
+					
 				}
-
+				
 			}
-
 		}
+
 
 		return ret;
 	}
@@ -133,9 +109,9 @@ public class MyThread extends Thread {
 						.cookies(cookies).get();
 				break;
 			} catch (Exception e) {
+
 			}
 		}
-		// getPeopleNamesFromDoc(doc, type, userName);
 
 		StringBuffer hash_id = new StringBuffer();
 		StringBuffer _xsrf = new StringBuffer();
@@ -162,34 +138,34 @@ public class MyThread extends Thread {
 							.timeout(10000)
 							.data("method", "next", "_xsrf", _xsrf.toString(),
 									"params", jsonobj.toString())
-							.method(Method.POST).cookies(cookies).get();
+							.method(Method.POST).cookies(cookies)
+							.ignoreContentType(false).get();
 					break;
 				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 			if (getPeopleNamesFromDoc(doc, type, userName) == 0)
 				break;
+
 		}
 	}
 
 	void scrabWeb(Map<String, String> cookies) {
 		String userName = null;
-		while (true) {
+		while (!queue.isEmpty()) {
 			while (true) {
 				try {
 					userName = queue.remove();
 					break;
 				} catch (Exception e) {
-					// e.printStackTrace();
-
 				}
 			}
-
 			getPeopleNameFromUrl(userName, urlFollowees, urlFolloweesNext,
 					"ee", cookies);
 			getPeopleNameFromUrl(userName, urlFollowers, urlFollowersNext,
 					"er", cookies);
-		}
 
+		}
 	}
 }
