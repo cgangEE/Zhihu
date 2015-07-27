@@ -32,6 +32,7 @@ public class MyThread extends Thread {
 
 	static ArrayBlockingQueue<String> queue = null;
 	static Set<String> peopleSet = null;
+	static Set<String> networkSet = null;
 
 	MyThread(Map<String, String> cookies) {
 		this.cookies = cookies;
@@ -43,6 +44,37 @@ public class MyThread extends Thread {
 
 	static final Semaphore semp = new Semaphore(1);
 
+	boolean addToDB(String A, String B){
+		if (networkSet.contains(A+" "+B)) return true;
+		networkSet.add(A+" "+B);
+		
+		System.out.println(A+"\t"+B);
+		
+		BasicDBObject bean = new BasicDBObject();
+		bean.put("A", A);
+		bean.put("B", B);
+
+		boolean finded = false;
+
+		while (true) {
+			try {
+				finded = !new DAO().find("network", bean).isEmpty();
+				break;
+			} catch (Exception e) {
+			}
+		}
+
+		if (!finded)
+			while (true) {
+				try {
+					new DAO().insert("network", bean);
+					break;
+				} catch (Exception e) {
+				}
+			}
+		return finded;
+	}
+	
 	int getPeopleNamesFromDoc(Document doc, String type, String userName) {
 		int ret = 0;
 		
@@ -60,11 +92,14 @@ public class MyThread extends Thread {
 					++ret;
 					
 					if (peopleSet.contains(peopleName)){
+						
 						if (type.compareTo("ee")==0){
-							System.out.println(userName+" "+peopleName);
+							if (!addToDB(userName, peopleName))
+							;
 						}
 						else{
-							System.out.println(peopleName+" "+userName);
+							if (!addToDB(peopleName, userName))
+							;
 						}
 					}
 					

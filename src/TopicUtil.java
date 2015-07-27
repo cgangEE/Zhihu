@@ -38,6 +38,7 @@ public class TopicUtil {
 		html = html.replaceAll("&lt;", "<");
 		html = html.replaceAll("&gt;", ">");
 		doc = Jsoup.parse(html);
+		
 
 		Elements elements = doc.select("a strong");
 		for (Element elem : elements) {
@@ -208,6 +209,7 @@ public class TopicUtil {
 					MyThread.peopleSet.add(peopleName);
 					MyThread.queue.add(peopleName);
 
+					
 					BasicDBObject bean = new BasicDBObject();
 					bean.put("name", peopleName);
 
@@ -215,7 +217,7 @@ public class TopicUtil {
 
 					while (true) {
 						try {
-							finded = !new DAO().find("people", bean).isEmpty();
+							finded = !new DAO().find("people2", bean).isEmpty();
 							break;
 						} catch (Exception e) {
 						}
@@ -224,11 +226,12 @@ public class TopicUtil {
 					if (!finded)
 						while (true) {
 							try {
-								new DAO().insert("people", bean);
+								new DAO().insert("people2", bean);
 								break;
 							} catch (Exception e) {
 							}
 						}
+					
 				}
 			}
 		}
