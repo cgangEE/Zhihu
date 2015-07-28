@@ -106,6 +106,43 @@ public class Zhihu {
 		}
 	}
 
+	static void getUpvoteFromDB() {
+		BasicDBObject bean = new BasicDBObject();
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		List<BasicDBObject> list = new DAO().find("upvote", bean);
+		for (BasicDBObject upvote : list) {
+			String A = upvote.getString("A");
+			String B = upvote.getString("B");
+			String s = A + "\t" + B;
+			Integer cnt = map.get(s);
+			if (cnt == null)
+				cnt = 0;
+			map.put(s, ++cnt);
+		}
+
+		for (Map.Entry<String, Integer> entry : map.entrySet()) {
+			System.out.println(entry.getKey() + "\t" + entry.getValue());
+		}
+	}
+
+	static void getReplyFromDB() {
+		BasicDBObject bean = new BasicDBObject();
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		List<BasicDBObject> list = new DAO().find("reply", bean);
+		for (BasicDBObject reply : list) {
+			String A = reply.getString("A");
+			String B = reply.getString("B");
+			String s = A + "\t" + B;
+			Integer cnt = map.get(s);
+			if (cnt == null)
+				cnt = 0;
+			map.put(s, ++cnt);
+		}
+		for (Map.Entry<String, Integer> entry : map.entrySet()) {
+			System.out.println(entry.getKey() + "\t" + entry.getValue());
+		}
+	}
+
 	static void getAnswerQuestionFromDB() {
 		BasicDBObject bean = new BasicDBObject();
 		List<BasicDBObject> list = new DAO().find("question", bean);
@@ -155,13 +192,41 @@ public class Zhihu {
 
 		try {
 			ExecutorService exec = Executors.newCachedThreadPool();
-			for (int i = 0; i < 1; ++i) {
+			for (int i = 0; i < 50; ++i) {
 				Upvote thread = new Upvote(cookies);
 				exec.execute(thread);
 			}
 			exec.shutdown();
 		} catch (Exception e) {
 		}
+	}
+
+	static void getReply() {
+		try {
+			ExecutorService exec = Executors.newCachedThreadPool();
+			for (int i = 0; i < 50; ++i) {
+				Reply thread = new Reply(cookies);
+				exec.execute(thread);
+			}
+			exec.shutdown();
+		} catch (Exception e) {
+		}
+
+	}
+
+	static void getCollectionsID() {
+		try {
+			ExecutorService exec = Executors.newCachedThreadPool();
+			for (int i = 0; i < 50; ++i) {
+				CollectionsID thread = new CollectionsID(cookies);
+				exec.execute(thread);
+			}
+		} catch (Exception e) {
+		}
+	}
+
+	static void getCollectionsIDFromDB() {
+		
 	}
 
 	public static void main(String args[]) {
@@ -177,8 +242,14 @@ public class Zhihu {
 		// getQuestion();
 		// getAnswerQuestionFromDB();
 
-		getAnswerFromDB();
-		getUpvote();
+		// getAnswerFromDB();
+		// getUpvote();
+		// getUpvoteFromDB();
+		// getReply();
+		// getReplyFromDB();
+		
+		//getCollectionsID();
+		getCollectionsIDFromDB();
 	}
 
 }
