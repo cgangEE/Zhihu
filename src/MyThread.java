@@ -177,7 +177,7 @@ public class MyThread extends Thread {
 							.ignoreContentType(false).get();
 					break;
 				} catch (Exception e) {
-					e.printStackTrace();
+				//	e.printStackTrace();
 				}
 			}
 			if (getPeopleNamesFromDoc(doc, type, userName) == 0)

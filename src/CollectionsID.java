@@ -59,9 +59,12 @@ public class CollectionsID extends Thread {
 		return list.get(3);
 	}
 
-	void addToDB(String collectionId) {
+	void addToDB(String collectionId, int cnt, String userName) {
 		BasicDBObject bean = new BasicDBObject();
 		bean.put("id", collectionId);
+		bean.put("cnt", cnt);
+		bean.put("userName", userName);
+
 		while (true) {
 			try {
 				new DAO().insert("collectionId", bean);
@@ -73,11 +76,21 @@ public class CollectionsID extends Thread {
 
 	void getCollectionsFromUrl(String url, String userName) {
 		Document doc = getDocFromUrl(url);
-		Elements elements = doc.getElementsByClass("zm-profile-fav-item-title");
+		Elements elements = doc.getElementsByClass("zm-profile-section-item");
+		
+		//System.out.println(elements.size());
+
 		for (Element element : elements) {
-			String collectionId = element.attr("href");
+			String collectionId = element
+					.getElementsByClass("zm-profile-fav-item-title").first()
+					.attr("href");
 			collectionId = collectionId.substring(12, collectionId.length());
-			addToDB(collectionId);
+			ArrayList<Integer> list = getNumbers(element
+					.getElementsByClass("zm-profile-fav-bio").first().text());
+
+			// System.out.println(collectionId+ " "+list.get(0));
+
+			addToDB(collectionId, list.get(0), userName);
 		}
 	}
 

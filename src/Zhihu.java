@@ -19,6 +19,7 @@ public class Zhihu {
 		MyThread.networkSet = Collections
 				.synchronizedSet(new HashSet<String>());
 		Upvote.answerQueue = new ArrayBlockingQueue<String>(1000000);
+		Collecting.idQueue = new ArrayBlockingQueue<String>(1000000);
 	}
 
 	static void getPeople() {
@@ -143,6 +144,40 @@ public class Zhihu {
 		}
 	}
 
+	static void getCollectingFromDB() {
+		BasicDBObject bean = new BasicDBObject();
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		List<BasicDBObject> list = new DAO().find("collecting", bean);
+		for (BasicDBObject reply : list) {
+			String A = reply.getString("A");
+			String B = reply.getString("B");
+			if( A.compareTo(B)==0) continue;
+			String s = A + "\t" + B;
+			Integer cnt = map.get(s);
+			if (cnt == null)
+				cnt = 0;
+			map.put(s, ++cnt);
+		}
+		for (Map.Entry<String, Integer> entry : map.entrySet()) {
+			System.out.println(entry.getKey() + "\t" + entry.getValue());
+		}
+	}
+
+	static void getCollectionsIDFromDB() {
+		BasicDBObject bean = new BasicDBObject();
+		List<BasicDBObject> list = new DAO().find("collectionId", bean);
+		for (BasicDBObject collection : list) {
+			String id = collection.getString("id");
+			int cnt = collection.getInt("cnt");
+			String userName = collection.getString("userName");
+			try {
+				Collecting.idQueue.put(id + " " + cnt + " " + userName);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	static void getAnswerQuestionFromDB() {
 		BasicDBObject bean = new BasicDBObject();
 		List<BasicDBObject> list = new DAO().find("question", bean);
@@ -159,6 +194,8 @@ public class Zhihu {
 			// System.out.println(answers.size());
 			for (BasicDBObject answer : answers) {
 				String peopleName = answer.getString("userName");
+			//	if (peopleName.compareTo(userName) == 0)
+			//		continue;
 				String s = peopleName + "\t" + userName;
 
 				Integer cnt = userNamesToAnswerCnt.get(s);
@@ -225,8 +262,15 @@ public class Zhihu {
 		}
 	}
 
-	static void getCollectionsIDFromDB() {
-		
+	static void getCollecting() {
+		try {
+			ExecutorService exec = Executors.newCachedThreadPool();
+			for (int i = 0; i < 50; ++i) {
+				Collecting thread = new Collecting(cookies);
+				exec.execute(thread);
+			}
+		} catch (Exception e) {
+		}
 	}
 
 	public static void main(String args[]) {
@@ -240,16 +284,19 @@ public class Zhihu {
 		// getUserInfo();
 		// getAnswer();
 		// getQuestion();
-		// getAnswerQuestionFromDB();
+		getAnswerQuestionFromDB();
 
-		// getAnswerFromDB();
-		// getUpvote();
+		//getAnswerFromDB();
+		//getUpvote();
 		// getUpvoteFromDB();
 		// getReply();
 		// getReplyFromDB();
-		
-		//getCollectionsID();
-		getCollectionsIDFromDB();
+
+		// getCollectionsID();
+
+		// getCollectionsIDFromDB();
+		// getCollecting();
+		// getCollectingFromDB();
 	}
 
 }
